@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "iBm2+JV7chNBMe40GvY0FPWR+3FVsvDWeB0m3gD7i60=",
+  "Source": "BE_InternetBanking",
+  "BasePath": "_content/BE_InternetBanking",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

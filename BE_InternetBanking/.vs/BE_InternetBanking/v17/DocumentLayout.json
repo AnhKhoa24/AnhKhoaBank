@@ -1,0 +1,97 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\AnhKhoaBank\\BE_InternetBanking\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|d:\\anhkhoabank\\be_internetbanking\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|solutionrelative:.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|d:\\anhkhoabank\\be_internetbanking\\be_internetbanking.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|solutionrelative:be_internetbanking.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|d:\\anhkhoabank\\be_internetbanking\\controllers\\bankingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D3C8862A-7C11-4B52-A17F-F31F6182E059}|BE_InternetBanking.csproj|solutionrelative:controllers\\bankingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "BE_InternetBanking.http",
+              "DocumentMoniker": "D:\\AnhKhoaBank\\BE_InternetBanking\\BE_InternetBanking.http",
+              "RelativeDocumentMoniker": "BE_InternetBanking.http",
+              "ToolTip": "D:\\AnhKhoaBank\\BE_InternetBanking\\BE_InternetBanking.http",
+              "RelativeToolTip": "BE_InternetBanking.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2025-06-02T18:15:42.73Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": ".gitignore",
+              "DocumentMoniker": "D:\\AnhKhoaBank\\BE_InternetBanking\\.gitignore",
+              "RelativeDocumentMoniker": ".gitignore",
+              "ToolTip": "D:\\AnhKhoaBank\\BE_InternetBanking\\.gitignore",
+              "RelativeToolTip": ".gitignore",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001407|",
+              "WhenOpened": "2025-06-02T18:15:28.661Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "BankingController.cs",
+              "DocumentMoniker": "D:\\AnhKhoaBank\\BE_InternetBanking\\Controllers\\BankingController.cs",
+              "RelativeDocumentMoniker": "Controllers\\BankingController.cs",
+              "ToolTip": "D:\\AnhKhoaBank\\BE_InternetBanking\\Controllers\\BankingController.cs",
+              "RelativeToolTip": "Controllers\\BankingController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-02T18:15:00.722Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 124,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
