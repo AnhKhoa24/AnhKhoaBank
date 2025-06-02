@@ -1,2 +1,83 @@
 appsettings.json
 firebase-adminsdk.json
+
+# Build Folders (tự động sinh ra)
+bin/
+obj/
+publish/
+*.Publish.xml
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio v17+/.NET Core
+.vs/
+.vscode/
+*.vscode/
+*.dbmdl
+*.dbproj.schemaview
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverlet*.json
+
+# Rider
+.idea/
+
+# Thư mục đóng gói NuGet
+*.nupkg
+# Packages folder (nếu bạn restore local và không push lên nuget.org)
+packages/
+# Thư mục tool nếu có
+.tool/
+
+# thư mục chứa file docker build context
+Dockerfile*
+docker-compose*
+.dockerignore
+
+
+# Chặn các file khóa/lock (nuget, npm, yarn…)
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.lock.json
+
+# Log files và files tự động sinh
+*.log
+*.pid
+
+# Visual Studio Code workspace settings
+*.code-workspace
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Thư mục tạm build container (nếu có)
+**/tmp/
+
+# Riêng cho macOS/Linux (nếu ai đó dev trên macOS/Linux cũng dùng repo chung)
+*.DS_Store
+*.AppleDouble
+*.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Riêng cho Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Các file node_modules (nếu có Frontend phía client)
+node_modules/
+
+# Các file tạm khác
+*.swp
+*.bak
+*~.nib
