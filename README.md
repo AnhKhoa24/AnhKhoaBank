@@ -84,9 +84,11 @@ Phần **Frontend** dùng **Flutter (>= 3.2)** để triển khai giao diện đ
 
 ## 🛠️ Kiến trúc & Công nghệ sử dụng
 
-<div align="center">
-  <img src="https://www.plantuml.com/plantuml/png/SoWkIImgAStDuIh9oKi6nKrs84yp9Io7ap6ajIYqZ3pchCAy4nS2APSsq5oKIiZAAAAAAA" alt="Architecture Diagram" />
-</div>
+
+<p align="center">
+  <img src="docs/sodohethong.png" alt="Architecture Diagram" width="800" height="600" />
+</p>
+
 
 - **Backend**:
 
