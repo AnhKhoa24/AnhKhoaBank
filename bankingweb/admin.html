@@ -103,7 +103,8 @@
 
     <div class="collapse navbar-collapse" id="navbarContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="#">Trang quản trị</a></li>
+        <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin.html">Trang quản trị</a></li>
       </ul>
 
       <div class="dropdown">
@@ -128,14 +129,14 @@
     <!-- Canvas để vẽ biểu đồ -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <canvas id="weeklyChart" height="100"></canvas>
+        <canvas id="weeklyChart" height="300"></canvas>
       </div>
     </div>
 
     <!-- Bảng dữ liệu giao dịch (sẽ được tạo động bằng JS) -->
     <div class="card shadow-sm">
       <div class="card-body">
-        <h5 class="card-title">Danh sách giao dịch từ endpoint datathongke</h5>
+        <h5 class="card-title">Danh sách giao dịch </h5>
         <div class="table-responsive">
           <table id="transactionTable" class="table table-bordered table-striped mb-0">
             <thead class="table-dark">
@@ -143,7 +144,7 @@
                 <th>STT</th>
                 <th>FromAccount</th>
                 <th>ToAccount</th>
-                <th>Số tiền</th>
+                <th>Số tiền (đ)</th>
                 <th>Message</th>
                 <th>Times</th>
               </tr>
