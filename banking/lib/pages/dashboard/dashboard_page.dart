@@ -1,16 +1,14 @@
+import 'package:banking/pages/auth/login/login_finger_print_page.dart';
+import 'package:banking/pages/card/card_page.dart';
 import 'package:banking/widgets/balance_card_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
+// import 'package:percent_indicator/linear_percent_indicator.dart';
 import '/utils/constants.dart';
 import 'package:dotted_border/dotted_border.dart';
 import '../../utils/routes.dart';
-import '../../widgets/balance_card.dart';
-
-// Import UserService và model
 import '../../services/getdash_board_user.dart';
 import '/services/models/user_profile.dart';
 
@@ -28,28 +26,6 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _futureProfile = UserService.fetchUserProfile();
-  }
-
-  String _formatBalance(int balance) {
-    final formatter = NumberFormat.decimalPattern();
-    return formatter.format(balance);
-  }
-
-  String _maskAccountNumber(String accountNumber) {
-    final length = accountNumber.length;
-
-    if (length <= 3) {
-      return accountNumber;
-    } else if (length <= 6) {
-      final part1 = accountNumber.substring(0, 3);
-      final part2 = accountNumber.substring(3);
-      return '$part1 $part2';
-    } else {
-      final part1 = accountNumber.substring(0, 3);
-      final part2 = accountNumber.substring(3, 6);
-      final part3 = accountNumber.substring(6);
-      return '$part1 $part2 $part3';
-    }
   }
 
   @override
@@ -151,24 +127,30 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _card('assets/svg/send_icon.svg', 'Transfer', () {
+              _card('assets/svg/send_icon.svg', 'Chuyển tiền', () {
                 Navigator.of(context).pushNamed(RouteGenerator.transferPage);
               }),
-              _card('assets/svg/recieve_icon.svg', 'Receive', () {
-                Navigator.of(
+              _cardImages('assets/images/icons8-qr-48.png', 'QR nhận tiền', () {
+                // Navigator.of(context).pushNamed(RouteGenerator.qrCodePage);
+                Navigator.push(
                   context,
-                ).pushNamed(RouteGenerator.loginFingerprintPage);
+                  MaterialPageRoute(builder: (context) => const QrCodeWidget()),
+                );
               }),
-              _card('assets/svg/withdraw_icon.svg', 'Withdraw', () {
-                Navigator.of(context).pushNamed(RouteGenerator.withdrawPage);
+              _card('assets/svg/withdraw_icon.svg', 'Thẻ', () {
+                // Navigator.of(context).pushNamed(RouteGenerator.addCardPage);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CardPage()),
+                );
               }),
-              _card('assets/svg/bill_icon.svg', 'Payment', () {
+              _card('assets/svg/bill_icon.svg', 'Khác', () {
                 Navigator.of(context).pushNamed(RouteGenerator.paymentPage);
               }),
             ],
           ),
           SizedBox(height: 24.h),
-          Text('Send to Friends', style: mediumTextStyle),
+          Text('Chuyển tiền bạn bè', style: mediumTextStyle),
           SizedBox(height: 16.h),
           Row(
             children: [
@@ -217,73 +199,50 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           SizedBox(height: 24.h),
-          Text('Savings', style: mediumTextStyle),
+          Text('Về chúng tôi', style: mediumTextStyle),
           SizedBox(height: 16.h),
           Container(
-            padding: REdgeInsets.all(16.r),
+            width: double.infinity,
+            height: 150.h,
             decoration: BoxDecoration(
-              color: whiteColor,
-              boxShadow: kDefaultBoxShadow,
-              borderRadius: BorderRadius.all(Radius.circular(6.r)),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: REdgeInsets.all(0),
-                  leading: Image.asset('assets/images/macbook_pro_image.png'),
-                  title: Text('Macbook Pro M1 Max 1TB', style: smallTextStyle),
-                  subtitle: Text('\$200/\$2,000', style: xSmallTextStyle),
-                  trailing: InkWell(
-                    onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(RouteGenerator.savingPage);
-                    },
-                    child: const Icon(Icons.more_horiz),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                LinearPercentIndicator(
-                  width: 295.w,
-                  lineHeight: 14.0,
-                  percent: 0.5,
-                  backgroundColor: const Color(0xFFEDEEF0),
-                  progressColor: yellowColor,
-                  barRadius: Radius.circular(17.r),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 24.h),
-          DottedBorder(
-            color: const Color(0xFF767D88),
-            strokeCap: StrokeCap.butt,
-            dashPattern: const [8, 6],
-            borderType: BorderType.RRect,
-            strokeWidth: 1,
-            radius: Radius.circular(6.r),
-            padding: REdgeInsets.all(16),
-            child: InkWell(
-              onTap: () {
-                Navigator.of(context).pushNamed(RouteGenerator.addSavingPage);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add, color: Color(0xFF767D88)),
-                  SizedBox(width: 50.w),
-                  Text(
-                    'Add Saving',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF767D88),
-                    ),
-                  ),
-                ],
+              borderRadius: BorderRadius.circular(6.r),
+              image: DecorationImage(
+                image: AssetImage('assets/images/banner2.png'),
+                fit: BoxFit.contain,
               ),
             ),
           ),
+
+          SizedBox(height: 24.h),
+          // DottedBorder(
+          //   color: const Color(0xFF767D88),
+          //   strokeCap: StrokeCap.butt,
+          //   dashPattern: const [8, 6],
+          //   borderType: BorderType.RRect,
+          //   strokeWidth: 1,
+          //   radius: Radius.circular(6.r),
+          //   padding: REdgeInsets.all(16),
+          //   child: InkWell(
+          //     onTap: () {
+          //       Navigator.of(context).pushNamed(RouteGenerator.addSavingPage);
+          //     },
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         const Icon(Icons.add, color: Color(0xFF767D88)),
+          //         SizedBox(width: 50.w),
+          //         Text(
+          //           'Add Saving',
+          //           style: GoogleFonts.plusJakartaSans(
+          //             fontSize: 14.sp,
+          //             fontWeight: FontWeight.w600,
+          //             color: const Color(0xFF767D88),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -304,6 +263,36 @@ class _DashboardPageState extends State<DashboardPage> {
               borderRadius: BorderRadius.all(Radius.circular(6.r)),
             ),
             child: SvgPicture.asset(icon, width: 20.w, height: 20.h),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF767D88),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardImages(String icon, String title, Function()? onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 64.w,
+            height: 64.h,
+            padding: REdgeInsets.symmetric(vertical: 22.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3A3A3A),
+              borderRadius: BorderRadius.all(Radius.circular(6.r)),
+            ),
+            child: Image.asset(icon, width: 20.w, height: 20.h),
           ),
           SizedBox(height: 8.h),
           Text(

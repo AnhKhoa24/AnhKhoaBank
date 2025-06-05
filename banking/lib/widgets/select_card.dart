@@ -65,7 +65,7 @@ class SelectCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'M Hanivan Adif',
+                                'AKBank',
                                 style:
                                     mediumTextStyle.copyWith(color: whiteColor),
                               ),

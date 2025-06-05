@@ -1,5 +1,7 @@
-﻿using BE_InternetBanking.Models.Entities;
+﻿using Azure.Core;
+using BE_InternetBanking.Models.Entities;
 using BE_InternetBanking.Services.Contracts;
+using BE_InternetBanking.Services.Helper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static BE_InternetBanking.Models.DTO.ResponseServies;
@@ -10,48 +12,31 @@ namespace BE_InternetBanking.Features.Auth
     {
         private readonly BankingContext _context;
         private readonly IMailService _mailService;
-        public LoginCommandHandler(BankingContext context, IMailService mailService)
+        private readonly IUser _isuer;
+        private readonly IOtp _iOtp;
+
+        public LoginCommandHandler(BankingContext context, IMailService mailService, IUser isuer, IOtp iOtp)
         {
             _context = context;
             _mailService = mailService;
+            _isuer = isuer;
+            _iOtp = iOtp;
         }
-        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancel)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Account || u.PhoneNumber == request.Account, cancellationToken);
-
+            var user = await _isuer.GetUserByAccountAsync(request.Account, request.Account, cancel);
             if (user == null)
-                return new LoginResponse(false, null!, "Tài khoản không tồn tại!");
+                return new LoginResponse(false, null!, "Account doesn't exist!");
 
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            bool isPwValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            if (!isPwValid)
+                return new LoginResponse(false,null!, "Password is incorrect!");
 
-            if (!isPasswordValid)
-                return new LoginResponse(false,null!, "Mật khẩu không đúng!");
-
-            string otp = await GenerateAndSaveOtpAsync(user.Id, "otpLogin");
+            string otp = await _iOtp.GenerateAndSaveOtpAsync(user.Id, "Otplogin");
 
             _ = Task.Run(() => _mailService.SendOtpEmailAsync(user.Email!, otp));
 
-            return new LoginResponse(true, user.Email! , "Đăng nhập thành công!");
+            return new LoginResponse(true, user.Email!, $"OTP will be sent to email: {user.Email!}");
         }
-        private async Task<string> GenerateAndSaveOtpAsync(Guid userId, string sentVia, int expiryMinutes = 5)
-        {
-            var otp = new Random().Next(100000, 999999).ToString();
-
-            var otpRequest = new OtpRequest
-            {
-                UserId = userId,
-                OtpCode = otp,
-                CreatedAt = DateTime.UtcNow,
-                ExpiredAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
-                IsUsed = false,
-                SentVia = sentVia
-            };
-
-            _context.OtpRequests.Add(otpRequest);
-            await _context.SaveChangesAsync();
-
-            return otp;
-        }
-
     }
 }

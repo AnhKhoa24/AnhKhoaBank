@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using BE_InternetBanking.Feature.UserProfile;
 using BE_InternetBanking.Features.Auth;
 using BE_InternetBanking.Models.DTO;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using static BE_InternetBanking.Models.DTO.ResponseServies;
 
 namespace BE_InternetBanking.Controllers
@@ -55,5 +59,18 @@ namespace BE_InternetBanking.Controllers
                 ? Ok(new { success = true, message = result.Message, token = result.Token })
                 : BadRequest(new { success = false, message = result.Message });
         }
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Lougout()
+        {
+            var userGuid = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+
+            var result = await _mediator.Send(new LogoutCommand(userGuid, jti!));
+            return result.Flag
+                 ? Ok(new { success = true, message = result.message })
+                 : BadRequest(new { success = false, message = result.message });
+        }
+
     }
 }

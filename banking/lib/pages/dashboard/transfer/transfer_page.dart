@@ -1,13 +1,30 @@
+import 'package:banking/services/get_check_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/utils/constants.dart';
-
 import '../../../utils/routes.dart';
 
-class TransferPage extends StatelessWidget {
-  const TransferPage({super.key});
+class TransferPage extends StatefulWidget {
+  const TransferPage({Key? key}) : super(key: key);
+
+  @override
+  _TransferPageState createState() => _TransferPageState();
+}
+
+class _TransferPageState extends State<TransferPage> {
+  late final BankingService _bankingService;
+  late Future<GetHistoryResponse> _futureHistory;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo BankingService với AuthService và httpClient bình thường
+    _bankingService = BankingService();
+    // Gọi API ngay khi widget được dựng
+    _futureHistory = _bankingService.getHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,62 +48,65 @@ class TransferPage extends StatelessWidget {
         shrinkWrap: true,
         padding: REdgeInsets.all(24),
         children: [
-          Text('Gần đây', style: mediumTextStyle),
-          SizedBox(height: 16.h),
-          Row(
-            children: [
-              Container(
-                height: 56.h,
-                width: 56.w,
-                padding: REdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadius.all(Radius.circular(6.r)),
-                ),
-                child: SvgPicture.asset('assets/svg/search_icon.svg'),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: SizedBox(
-                  height: 56.h,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: 7,
-                    padding: REdgeInsets.all(0),
-                    itemBuilder:
-                        (context, index) => InkWell(
-                          onTap: () {
-                            Navigator.of(
-                              context,
-                            ).pushNamed(RouteGenerator.transferToFriendsPage);
-                          },
-                          child: Container(
-                            width: 56.w,
-                            height: 56.h,
-                            margin: REdgeInsets.only(right: 12.w),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10.r),
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10.r),
-                              ),
-                              child: Image.asset(
-                                'assets/images/friends_image.png',
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                          ),
-                        ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // // Phần "Gần đây" vẫn giống cũ…
+          // Text('Gần đây', style: mediumTextStyle),
+          // SizedBox(height: 16.h),
+          // Row(
+          //   children: [
+          //     Container(
+          //       height: 56.h,
+          //       width: 56.w,
+          //       padding: REdgeInsets.all(14),
+          //       decoration: BoxDecoration(
+          //         color: primaryColor,
+          //         borderRadius: BorderRadius.all(Radius.circular(6.r)),
+          //       ),
+          //       child: SvgPicture.asset('assets/svg/search_icon.svg'),
+          //     ),
+          //     SizedBox(width: 12.w),
+          //     Expanded(
+          //       child: SizedBox(
+          //         height: 56.h,
+          //         child: ListView.builder(
+          //           shrinkWrap: true,
+          //           scrollDirection: Axis.horizontal,
+          //           physics: const BouncingScrollPhysics(),
+          //           itemCount: 7,
+          //           padding: REdgeInsets.all(0),
+          //           itemBuilder:
+          //               (context, index) => InkWell(
+          //                 onTap: () {
+          //                   Navigator.of(
+          //                     context,
+          //                   ).pushNamed(RouteGenerator.transferToFriendsPage);
+          //                 },
+          //                 child: Container(
+          //                   width: 56.w,
+          //                   height: 56.h,
+          //                   margin: REdgeInsets.only(right: 12.w),
+          //                   decoration: BoxDecoration(
+          //                     borderRadius: BorderRadius.all(
+          //                       Radius.circular(10.r),
+          //                     ),
+          //                   ),
+          //                   child: ClipRRect(
+          //                     borderRadius: BorderRadius.all(
+          //                       Radius.circular(10.r),
+          //                     ),
+          //                     child: Image.asset(
+          //                       'assets/images/friends_image.png',
+          //                       fit: BoxFit.fill,
+          //                     ),
+          //                   ),
+          //                 ),
+          //               ),
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
+
+          // Phần "Chuyển khoản ngân hàng"…
           SizedBox(height: 24.h),
           Text('Chuyển khoản ngân hàng', style: mediumTextStyle),
           SizedBox(height: 16.h),
@@ -119,6 +139,8 @@ class TransferPage extends StatelessWidget {
               ),
             ),
           ),
+
+          // Phần "Lịch sử chuyển tiền" – dùng FutureBuilder để load từ API
           SizedBox(height: 24.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,52 +150,141 @@ class TransferPage extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16.h),
-          ListView.builder(
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            physics: const BouncingScrollPhysics(),
-            itemCount: 4,
-            padding: REdgeInsets.all(0),
-            itemBuilder:
-                (context, index) => ListTile(
-                  title: Text(
-                    'Chuyển tiền Anh Khoa',
-                    style: smallTextStyle,
+
+          // Dùng FutureBuilder để kiểm soát loading / success / error
+          FutureBuilder<GetHistoryResponse>(
+            future: _futureHistory,
+            builder: (context, snapshot) {
+              // 1) Khi đang load
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: Padding(
+                    padding: REdgeInsets.symmetric(vertical: 40.h),
+                    child: CircularProgressIndicator(color: primaryColor),
                   ),
-                  subtitle: Text(
-                    'June 7 , 2022 at 11:10 PM',
-                    style: xSmallTextStyle,
+                );
+              }
+
+              // 2) Nếu có lỗi trong quá trình gọi API
+              if (snapshot.hasError) {
+                // In ra error để debug
+                debugPrint('getHistory error: ${snapshot.error}');
+                return Center(
+                  child: Padding(
+                    padding: REdgeInsets.symmetric(vertical: 40.h),
+                    child: Text(
+                      'Đã có lỗi xảy ra:\n${snapshot.error}',
+                      style: smallTextStyle.copyWith(color: redColor),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  trailing: RichText(
-                    text: TextSpan(
-                      // Phần số chính: "1,200,000 "
-                      text: '1,200,000 ',
-                      style: mediumTextStyle.copyWith(color: redColor),
-                      children: [
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          child: Transform.translate(
-                            offset: const Offset(
-                              0,
-                              -2,
-                            ), // Nâng "đ" lên khoảng 4px
-                            child: Text(
-                              'vnđ',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: redColor,
+                );
+              }
+
+              // 3) Khi đã load xong (snapshot.hasData == true)
+              final GetHistoryResponse response = snapshot.data!;
+
+              // 3.1) Nếu flag == false (server trả về thất bại)
+              if (!response.flag) {
+                return Center(
+                  child: Padding(
+                    padding: REdgeInsets.symmetric(vertical: 40.h),
+                    child: Text(
+                      response.message,
+                      style: smallTextStyle.copyWith(color: redColor),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              // 3.2) Khi thành công, lấy list Transaction
+              final List<Transaction> listTrans = response.trans;
+              if (listTrans.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: REdgeInsets.symmetric(vertical: 40.h),
+                    child: Text(
+                      'Chưa có giao dịch nào.',
+                      style: smallTextStyle,
+                    ),
+                  ),
+                );
+              }
+
+              // 3.3) Render ListView.builder theo đúng dữ liệu:
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: listTrans.length,
+                itemBuilder: (context, index) {
+                  final tx = listTrans[index];
+                  // Chuyển DateTime thành chuỗi hiển thị nếu muốn (tùy bạn format)
+                  final formattedTime =
+                      '${tx.timestamp.day}/${tx.timestamp.month}/${tx.timestamp.year}  ${tx.timestamp.hour.toString().padLeft(2, '0')}:${tx.timestamp.minute.toString().padLeft(2, '0')}';
+
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(tx.message, style: smallTextStyle),
+                    subtitle: Text(formattedTime, style: xSmallTextStyle),
+                    trailing: RichText(
+                      text: TextSpan(
+                        text: _formatCurrency(tx.amount) + ' ',
+                        style: mediumTextStyle.copyWith(color: redColor),
+                        children: [
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            child: Transform.translate(
+                              offset: Offset(0, -2),
+                              child: Text(
+                                'vnđ',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: redColor,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
     );
   }
+
+  /// Ví dụ hàm format số tiền (voî̃n tệ) cho đẹp: 1,234,000
+ String _formatCurrency(double amount) {
+  // Chuyển thành chuỗi với 2 chữ số thập phân
+  final raw = amount.toStringAsFixed(2); // Ví dụ: "1234.00", "1234.50", "1234.56"
+  final parts = raw.split('.');
+  String integerPart = parts[0];           // Ví dụ: "1234"
+  String decimalPart = parts[1];           // Ví dụ: "00", "50", "56"
+
+  // Thêm dấu phẩy vào phần nguyên
+  final buffer = StringBuffer();
+  for (int i = 0; i < integerPart.length; i++) {
+    final posFromRight = integerPart.length - i;
+    buffer.write(integerPart[i]);
+    if (posFromRight > 1 && posFromRight % 3 == 1) {
+      buffer.write(',');
+    }
+  }
+  String formattedInteger = buffer.toString(); // Ví dụ: "1,234"
+
+  // Nếu phần thập phân là "00", bỏ luôn
+  if (decimalPart == '00') {
+    return formattedInteger;
+  }
+
+  // Ngược lại, giữ lại phần thập phân
+  return '$formattedInteger.$decimalPart';
+}
+
 }

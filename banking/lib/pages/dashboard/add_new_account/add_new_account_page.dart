@@ -118,9 +118,9 @@ class _AddNewAccountPageState extends State<AddNewAccountPage> {
                 child: CElevatedButton(
                     child: const Text('Add Account'),
                     onPressed: () {
-                      Navigator.of(context).pushReplacementNamed(
-                        RouteGenerator.loginFingerprintPage,
-                      );
+                      // Navigator.of(context).pushReplacementNamed(
+                      //   // RouteGenerator.loginFingerprintPage,
+                      // );
                     })),
             SizedBox(
               height: 20.h,

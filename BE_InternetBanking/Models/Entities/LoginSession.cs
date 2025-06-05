@@ -9,7 +9,7 @@ public partial class LoginSession
 
     public Guid? UserId { get; set; }
 
-    public string? JwtToken { get; set; }
+    public string? JtiToken { get; set; }
 
     public string? DeviceInfo { get; set; }
 

@@ -2,9 +2,11 @@ using BE_InternetBanking.Models.Entities;
 using BE_InternetBanking.Models.Mapping;
 using BE_InternetBanking.Services.Contracts;
 using BE_InternetBanking.Services.Repositories;
+using Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +67,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]!)
             )
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+                if (string.IsNullOrEmpty(jti))
+                {
+                    context.Fail("Token doesn't contain jti");
+                    return;
+                }
+                var db = context.HttpContext.RequestServices
+                               .GetRequiredService<BankingContext>();
+
+                var tokenEntry = await db.LoginSessions
+                    .FirstOrDefaultAsync(t => t.JtiToken == jti, context.HttpContext.RequestAborted);
+
+                if (tokenEntry == null)
+                {
+                    context.Fail("Token has been revoked or doesn't exist");
+                    return;
+                }
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -89,6 +114,9 @@ builder.Services.AddMediatR(cfg =>
 
 
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IUser, UserRepositories>();
+builder.Services.AddScoped<IOtp, OtpRepositories>();
+builder.Services.AddScoped<IQRCodeService, QRCodeService>();
 
 builder.Services.AddSingleton<IFcmSender>(sp =>
 {

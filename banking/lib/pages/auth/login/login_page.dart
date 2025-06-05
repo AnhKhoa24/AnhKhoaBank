@@ -191,16 +191,16 @@ class _LoginPageState extends State<LoginPage> {
                           },
                   ),
                 ),
-                SizedBox(height: 16.h),
-                Text('Or Sign In with', style: xSmallTextStyle),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: SecondaryButton(
-                    child: const Text('Google'),
-                    onPressed: () {},
-                  ),
-                ),
+                // SizedBox(height: 16.h),
+                // Text('Or Sign In with', style: xSmallTextStyle),
+                // SizedBox(height: 16.h),
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: SecondaryButton(
+                //     child: const Text('Google'),
+                //     onPressed: () {},
+                //   ),
+                // ),
                 SizedBox(height: 24.h),
                 InkWell(
                   onTap: () {
@@ -213,11 +213,11 @@ class _LoginPageState extends State<LoginPage> {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: 'Not Register? ',
+                            text: 'Chưa có tài khoản? ',
                             style: xSmallTextStyle,
                           ),
                           TextSpan(
-                            text: 'Create an Account',
+                            text: 'Tạo tài khoản',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,

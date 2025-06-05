@@ -1,12 +1,11 @@
+import 'package:banking/pages/scan/qr_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import '/utils/constants.dart';
-
-import '../../utils/routes.dart';
 import '../card/card_page.dart';
 import '../dashboard/dashboard_page.dart';
 import '../profile/profile_page.dart';
-import '../wallet/wallet_page.dart';
+// import '../wallet/wallet_page.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({Key? key}) : super(key: key);
@@ -20,7 +19,7 @@ class _NavigationPageState extends State<NavigationPage> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardPage(),
-    WalletPage(),
+    // WalletPage(),
     CardPage(),
     ProfilePage()
   ];
@@ -34,9 +33,6 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //     title: const Text('Flutter BottomNavigationBar Example'),
-      //     backgroundColor: Colors.green),
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
@@ -49,24 +45,24 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               label: 'Dashboard',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.wallet,
-                color: _selectedIndex == 1 ? primaryColor : navigationIconColor,
-              ),
-              label: 'Wallet',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(
+            //     Icons.wallet,
+            //     color: _selectedIndex == 1 ? primaryColor : navigationIconColor,
+            //   ),
+            //   label: 'Wallet',
+            // ),
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.credit_card_outlined,
-                color: _selectedIndex == 2 ? primaryColor : navigationIconColor,
+                color: _selectedIndex == 1 ? primaryColor : navigationIconColor,
               ),
               label: 'Card',
             ),
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.person_outline_outlined,
-                color: _selectedIndex == 3 ? primaryColor : navigationIconColor,
+                color: _selectedIndex == 2 ? primaryColor : navigationIconColor,
               ),
               label: 'Profile',
             ),
@@ -75,12 +71,6 @@ class _NavigationPageState extends State<NavigationPage> {
           currentIndex: _selectedIndex,
           selectedItemColor: primaryColor,
           iconSize: 24,
-          // selectedIconTheme: IconThemeData(
-          //   color: primaryColor
-          // ),
-          // unselectedIconTheme: IconThemeData(
-          //   color: navigationIconColor
-          // ),
           showSelectedLabels: false,
           showUnselectedLabels: false,
           unselectedLabelStyle: const TextStyle(
@@ -94,9 +84,13 @@ class _NavigationPageState extends State<NavigationPage> {
         backgroundColor: primaryColor,
         child: SvgPicture.asset('assets/svg/scan_icon.svg'),
         onPressed: () {
-          Navigator.of(context).pushNamed(
-            RouteGenerator.scanPage,
-          );
+          // Navigator.of(context).pushNamed(
+          //   RouteGenerator.scanPage,
+          // );
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const QRScanPage()),
+            );
         },
       ),
     );

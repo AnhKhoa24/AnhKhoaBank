@@ -1,12 +1,9 @@
-// lib/pages/transfer_successful_page.dart
-
+import 'package:banking/utils/routes.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '/components/c_elevated_button.dart';
-import '/components/secondary_button.dart';
 import '/utils/constants.dart';
 import 'package:intl/intl.dart';
 
@@ -42,7 +39,7 @@ class TransferSuccessfulPage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: const Color(0xFFDBDBDB),
         leadingWidth: 100.w,
-        title: Text('Transfer', style: mediumTextStyle),
+        title: Text('Chuyển khoản', style: mediumTextStyle),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -115,7 +112,7 @@ class TransferSuccessfulPage extends StatelessWidget {
                   // Hiển thị ngày giờ giao dịch
                   Text(formattedDate, style: xSmallTextStyle),
                   SizedBox(height: 20.h),
-                  Text('View transaction details', style: mediumTextStyle),
+                  Text('Xem lại giao dịch', style: mediumTextStyle),
                 ],
               ),
             ),
@@ -173,28 +170,11 @@ class TransferSuccessfulPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: CElevatedButton(
-                    child: const Text('Back To Home'),
+                    child: const Text('Quay về trang chủ'),
                     onPressed: () {
                       // Quay về màn hình chính
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: SecondaryButton(
-                    child: Text(
-                      'Send Again',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: secondaryButtonTextColor,
-                      ),
-                    ),
-                    onPressed: () {
-                      // Quay ngược về trang chuyển tiền trước đó
-                      Navigator.of(context).pop();
+                      // Navigator.of(context).popUntil((route) => route.isFirst);
+                      Navigator.of(context).pushReplacementNamed(RouteGenerator.navigationPage);
                     },
                   ),
                 ),

@@ -13,5 +13,6 @@ namespace BE_InternetBanking.Models.DTO
         public record class CheckAccountResponse(bool Flag, string message, string UserName);
         public record class GetHistoryNotificationResponse(bool Flag, string message, List<MessageDTO> msgs);
         public record class TransactionHistoryResponse(bool Flag, string message, List<TransactionHistory> trans);
+        public record class LogoutResponse(bool Flag, string message);
     }
 }

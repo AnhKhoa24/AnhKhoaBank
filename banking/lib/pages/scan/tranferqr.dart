@@ -1,6 +1,7 @@
-import 'package:banking/pages/dashboard/transfer/transfer_successful_page.dart';
-import 'package:banking/services/banking_api.dart';
+import 'package:banking/services/biometric_popup.dart';
 import 'package:banking/services/get_check_account.dart';
+import 'package:banking/services/banking_api.dart';
+import 'package:banking/pages/dashboard/transfer/transfer_successful_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,17 +11,23 @@ import 'package:intl/intl.dart';
 import '/components/c_text_form_field.dart';
 import '/utils/constants.dart';
 import '/widgets/balance_card_loader.dart';
-import 'package:banking/services/biometric_popup.dart';
 
-class TransferBankPage extends StatefulWidget {
-  const TransferBankPage({super.key});
+class TransferQrPage extends StatefulWidget {
+  // Cho phép truyền sẵn số tài khoản + tên tài khoản khi push từ QRScanPage
+  final String? initialAccount;
+  final String? initialName;
+
+  const TransferQrPage({Key? key, this.initialAccount, this.initialName})
+    : super(key: key);
 
   @override
-  State<TransferBankPage> createState() => _TransferBankPageState();
+  State<TransferQrPage> createState() => _TransferQrPageState();
 }
 
-class _TransferBankPageState extends State<TransferBankPage> {
+class _TransferQrPageState extends State<TransferQrPage> {
   String _accountRaw = '';
+  late TextEditingController
+  _accountController; // controller cho ô nhập số tài khoản
   late TextEditingController _messageController;
   late TextEditingController _amountController;
 
@@ -28,98 +35,28 @@ class _TransferBankPageState extends State<TransferBankPage> {
   String? _accountFullName;
   String? _accountError;
 
-  bool _isTransferLoading = false; // trạng thái loading của nút
-
-  Future<void> _authenticateAndTransfer() async {
-    final BiometricService _biometricService = BiometricService();
-    final bool isAuth = await _biometricService.authenticate();
-    if (!isAuth) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Xác thực sinh trắc học không thành công'),
-        ),
-      );
-      return;
-    }
-    if (_isTransferLoading) return;
-
-    _handleTransfer(); // đây cũng là async, nhưng gọi bình thường
-  }
-  double getTien(){
-    final rawAmount = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    return  rawAmount.isEmpty ? 0.0 : double.parse(rawAmount);
-  }
-
-  Future<void> _handleTransfer() async {
-    // 1. Lấy số tiền
-    final rawAmount = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final double amountValue =
-        rawAmount.isEmpty ? 0.0 : double.parse(rawAmount);
-
-    // 2. Lời nhắn
-    final String messageValue = _messageController.text;
-
-    // 3. Validation đơn giản
-    if (_accountRaw.isEmpty || _accountRaw.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập số tài khoản hợp lệ')),
-      );
-      return;
-    }
-    if (amountValue <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Số tiền phải lớn hơn 0')));
-      return;
-    }
-
-    // 4. Bắt đầu loading
-    setState(() {
-      _isTransferLoading = true;
-    });
-
-    try {
-      final service = TranferService();
-      final resp = await service.transfer(
-        accountNumber: _accountRaw,
-        amount: amountValue,
-        message: messageValue,
-      );
-
-      if (resp.success) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder:
-                (_) => TransferSuccessfulPage(
-                  recipientName:
-                      _accountFullName!, // tên người nhận đã lấy từ API checkAccount
-                  recipientAccount: _accountRaw, // số tài khoản người nhận
-                  amount: amountValue, // số tiền
-                  timestamp: DateTime.now(), // hoặc thời điểm do server trả về
-                ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Thất bại: ${resp.message}')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isTransferLoading = false;
-        });
-      }
-    }
-  }
+  bool _isTransferLoading = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Khởi tạo controller cho ô nhập số tài khoản
+    _accountController = TextEditingController();
+
+    // Nếu có initialAccount (được gửi từ QRScanPage), điền sẵn vào ô
+    if (widget.initialAccount != null) {
+      _accountRaw = widget.initialAccount!;
+      _accountController.text = widget.initialAccount!;
+      // Nếu đồng thời có initialName, gán luôn vào biến hiển thị tên
+      if (widget.initialName != null) {
+        _accountFullName = widget.initialName;
+      } else {
+        // Nếu chỉ có số tài khoản trước, bạn có thể gọi API checkAccount tương tự hàm _onAccountChanged
+        _fetchAccountName(widget.initialAccount!);
+      }
+    }
+
     _amountController = TextEditingController()..addListener(_onAmountChanged);
     _messageController = TextEditingController(text: 'Chuyển tiền');
   }
@@ -129,7 +66,40 @@ class _TransferBankPageState extends State<TransferBankPage> {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _messageController.dispose();
+    _accountController.dispose();
     super.dispose();
+  }
+
+  // Gọi API checkAccount khi chỉ có số tài khoản, muốn lấy tên
+  Future<void> _fetchAccountName(String accountNumber) async {
+    setState(() {
+      _isAccountLoading = true;
+      _accountError = null;
+      _accountFullName = null;
+    });
+    try {
+      final bankingService = BankingService();
+      final response = await bankingService.checkAccount(
+        accountNumber: accountNumber,
+      );
+      if (response.success) {
+        setState(() {
+          _accountFullName = response.fullname;
+        });
+      } else {
+        setState(() {
+          _accountError = response.message;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _accountError = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isAccountLoading = false;
+      });
+    }
   }
 
   Future<void> _onAccountChanged(String newValue) async {
@@ -169,11 +139,6 @@ class _TransferBankPageState extends State<TransferBankPage> {
           _accountError = response.message;
         });
       }
-
-      // setState(() {
-      //   _accountFullName = response.fullname;
-      //   _accountError = null;
-      // });
     } catch (e) {
       setState(() {
         _accountFullName = null;
@@ -186,49 +151,109 @@ class _TransferBankPageState extends State<TransferBankPage> {
     }
   }
 
-  // void _onAmountChanged() {
-  //   final rawText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-  //   if (rawText.isEmpty) {
-  //     _amountController.value = const TextEditingValue(
-  //       text: '',
-  //       selection: TextSelection.collapsed(offset: 0),
-  //     );
-  //     return;
-  //   }
-  //   final parsed = int.parse(rawText);
-  //   final formatted = NumberFormat.decimalPattern().format(parsed);
-  //   _amountController.value = TextEditingValue(
-  //     text: formatted,
-  //     selection: TextSelection.collapsed(offset: formatted.length),
-  //   );
-  // }
   void _onAmountChanged() {
-  // Lấy chuỗi chỉ chứa số
-  final rawText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final rawText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-  if (rawText.isEmpty) {
-    // Nếu không còn chữ số nào, reset controller về chuỗi rỗng
-    // và gọi setState để rebuild
-    _amountController.value = const TextEditingValue(
-      text: '',
-      selection: TextSelection.collapsed(offset: 0),
+    if (rawText.isEmpty) {
+      _amountController.value = const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+      setState(() {});
+      return;
+    }
+
+    final parsed = int.parse(rawText);
+    final formatted = NumberFormat.decimalPattern().format(parsed);
+
+    _amountController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
-    setState(() {});  // ← thêm dòng này
-    return;
+    setState(() {});
   }
 
-  // Chuyển rawText thành số int, rồi format lại thành chuỗi có phân cách hàng nghìn
-  final parsed = int.parse(rawText);
-  final formatted = NumberFormat.decimalPattern().format(parsed);
+  double getTien() {
+    final rawAmount = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    return rawAmount.isEmpty ? 0.0 : double.parse(rawAmount);
+  }
 
-  // Cập nhật controller và gọi setState để widget rebuild
-  _amountController.value = TextEditingValue(
-    text: formatted,
-    selection: TextSelection.collapsed(offset: formatted.length),
-  );
-  setState(() {});  // ← và thêm dòng này
-}
+  Future<void> _authenticateAndTransfer() async {
+    final BiometricService _biometricService = BiometricService();
+    final bool isAuth = await _biometricService.authenticate();
+    if (!isAuth) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Xác thực sinh trắc học không thành công'),
+        ),
+      );
+      return;
+    }
+    if (_isTransferLoading) return;
 
+    _handleTransfer();
+  }
+
+  Future<void> _handleTransfer() async {
+    final rawAmount = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final double amountValue =
+        rawAmount.isEmpty ? 0.0 : double.parse(rawAmount);
+    final String messageValue = _messageController.text;
+
+    if (_accountRaw.isEmpty || _accountRaw.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập số tài khoản hợp lệ')),
+      );
+      return;
+    }
+    if (amountValue <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Số tiền phải lớn hơn 0')));
+      return;
+    }
+
+    setState(() {
+      _isTransferLoading = true;
+    });
+
+    try {
+      final service = TranferService();
+      final resp = await service.transfer(
+        accountNumber: _accountRaw,
+        amount: amountValue,
+        message: messageValue,
+      );
+
+      if (resp.success) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder:
+                (_) => TransferSuccessfulPage(
+                  recipientName: _accountFullName!,
+                  recipientAccount: _accountRaw,
+                  amount: amountValue,
+                  timestamp: DateTime.now(),
+                ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Thất bại: ${resp.message}')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTransferLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -280,11 +305,14 @@ class _TransferBankPageState extends State<TransferBankPage> {
           ),
           SizedBox(height: 12.h),
 
-          // Nhập số tài khoản người nhận
-          Text('Số tài khoản người nhận', style: mediumTextStyle),
-          SizedBox(height: 16.h),
-          CTextFormField(hintText: '1234567890', onChanged: _onAccountChanged),
+          CTextFormField(
+            textControllor: _accountController,
+            hintText: '1234567890',
+            onChanged: _onAccountChanged,
+          ),
+
           SizedBox(height: 8.h),
+
           if (_isAccountLoading)
             Row(
               children: [
@@ -324,7 +352,7 @@ class _TransferBankPageState extends State<TransferBankPage> {
 
           SizedBox(height: 16.h),
 
-          // Hiển thị Balance (giữ nguyên)
+          // Hiển thị Balance
           Text('Balance', style: mediumTextStyle),
           SizedBox(height: 12.h),
           const BalanceCardLoader(),
@@ -342,9 +370,7 @@ class _TransferBankPageState extends State<TransferBankPage> {
               controller: _amountController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: heading2.copyWith(
-                // Ví dụ: fontSize: 24.sp, fontWeight: FontWeight.bold
-              ),
+              style: heading2.copyWith(),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6.r),
@@ -389,50 +415,20 @@ class _TransferBankPageState extends State<TransferBankPage> {
           ),
 
           SizedBox(height: 24.h),
-          // CElevatedButton(
-          //   child:
-          //       _isTransferLoading
-          //           ? SizedBox(
-          //             width: 16.r,
-          //             height: 16.r,
-          //             child: const CircularProgressIndicator(
-          //               strokeWidth: 2,
-          //               color: Colors.white,
-          //             ),
-          //           )
-          //           : const Text('Chuyển tiền'),
-          //   onPressed: () async {
-          //     final BiometricService _biometricService = BiometricService();
-          //     final bool isAuth = await _biometricService.authenticate();
-          //     if (!isAuth) {
-          //       ScaffoldMessenger.of(context).showSnackBar(
-          //         const SnackBar(
-          //           content: Text('Xác thực sinh trắc học không thành công'),
-          //         ),
-          //       );
-          //       return;
-          //     }
-          //     if (_isTransferLoading) return;
-          //     _handleTransfer();
-          //   },
-          // ),
+
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(
-                double.infinity,
-                48.h,
-              ), // hoặc tuỳ chỉnh kích thước
+              minimumSize: Size(double.infinity, 48.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6.r),
               ),
-              backgroundColor: primaryColor,      // Màu nền khi enabled
-              foregroundColor: Colors.white, 
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
               textStyle: TextStyle(
-                fontSize: 16.sp,                  // Kích thước chữ (sử dụng screenutil)
-                fontWeight: FontWeight.w600,      // In đậm vừa phải
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            // Hiển thị loading indicator khi đang transfer, ngược lại hiển thị label
             child:
                 _isTransferLoading
                     ? SizedBox(
@@ -444,9 +440,10 @@ class _TransferBankPageState extends State<TransferBankPage> {
                       ),
                     )
                     : const Text('Chuyển tiền'),
-            // Nếu _accountFullName == null hoặc đang loading thì onPressed = null => disabled
             onPressed:
-                (_accountFullName != null && !_isTransferLoading && getTien() > 1000)
+                (_accountFullName != null &&
+                        !_isTransferLoading &&
+                        getTien() > 1000)
                     ? () {
                       _authenticateAndTransfer();
                     }

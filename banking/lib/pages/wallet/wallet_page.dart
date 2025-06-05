@@ -1,54 +1,12 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:wallet_app/widgets/balance_card.dart';
-
-// import '../../utils/constants.dart';
-
-// class WalletPage extends StatelessWidget {
-//   const WalletPage({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//   backgroundColor: scaffoldColor,
-
-//       body: RPadding(
-//         padding: REdgeInsets.all(24.0),
-//         child: Column(
-//           children: [
-//              SizedBox(
-//               height: 24.h,
-//             ),
-//             Text('Wallet',
-//         style: mediumTextStyle,
-//         ),
-//          SizedBox(
-//               height: 24.h,
-//             ),
-//             BalanceCard(),
-//             SizedBox(
-//               height: 24.h,
-//             ),
-
-// ignore_for_file: no_leading_underscores_for_local_identifiers, unused_element, non_constant_identifier_names
-
 import 'package:badges/badges.dart' as badges;
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
+import 'package:banking/widgets/balance_card_loader.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import '/utils/constants.dart';
-
 import '../../utils/routes.dart';
-import '../../widgets/balance_card.dart';
 
 class _BarChart extends StatelessWidget {
   const _BarChart();
@@ -371,8 +329,7 @@ class WalletPageState extends State<WalletPage> {
           SizedBox(
             height: 24.h,
           ),
-          const BalanceCard(balanceText: '\$46,120.38',
-            accountText: '1233 **** **** 1234',),
+          const BalanceCardLoader(),
           SizedBox(
             height: 24.h,
           ),

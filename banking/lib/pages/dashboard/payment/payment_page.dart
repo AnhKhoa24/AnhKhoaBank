@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '/components/c_elevated_button.dart';
+// import '/components/c_elevated_button.dart';
 
 import '../../../models/services_list.dart';
 import '../../../utils/constants.dart';
-import '../../../utils/routes.dart';
+// import '../../../utils/routes.dart';
 
 class PaymentPage extends StatelessWidget {
   const PaymentPage({super.key});
@@ -21,7 +21,7 @@ class PaymentPage extends StatelessWidget {
         backgroundColor: scaffoldColor,
         leadingWidth: 100.w,
         title: Text(
-          'Payment',
+          'Khác',
           style: mediumTextStyle,
         ),
         leading: IconButton(
@@ -41,7 +41,7 @@ class PaymentPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Service',
+              'Dịch vụ',
               style: mediumTextStyle,
             ),
             SizedBox(
@@ -63,18 +63,18 @@ class PaymentPage extends StatelessWidget {
                       servicesList[index].title, servicesList[index].onTap);
                 }),
             const Expanded(flex: 1, child: SizedBox()),
-            SizedBox(
-                width: double.infinity,
-                child: CElevatedButton(
-                    child: const Text('Back To Home'),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(
-                        RouteGenerator.addNewAccountPage,
-                      );
-                    })),
-            SizedBox(
-              height: 20.h,
-            ),
+            // SizedBox(
+            //     width: double.infinity,
+            //     child: CElevatedButton(
+            //         child: const Text('Trở về trang chủ'),
+            //         onPressed: () {
+            //           Navigator.of(context).pushReplacementNamed(
+            //             RouteGenerator.navigationPage,
+            //           );
+            //         })),
+            // SizedBox(
+            //   height: 20.h,
+            // ),
           ],
         ),
       ),

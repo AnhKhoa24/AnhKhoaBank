@@ -11,14 +11,12 @@ import '/pages/dashboard/saving/add_saving_page.dart';
 import '/pages/dashboard/saving/saving_page.dart';
 import '/pages/dashboard/transfer/transfer_bank_page.dart';
 import '/pages/dashboard/transfer/transfer_page.dart';
-import '/pages/dashboard/transfer/transfer_successful_page.dart';
+// import '/pages/dashboard/transfer/transfer_successful_page.dart';
 import '/pages/dashboard/transfer/transfer_to_friends_page.dart';
 import '/pages/dashboard/withdraw/withdraw_code_page.dart';
 import '/pages/dashboard/withdraw/withdraw_page.dart';
 import '/pages/profile/security_page.dart';
-import '/pages/scan/scan_page.dart';
 import '/pages/splash/splash_page.dart';
-
 import '../pages/auth/login/login_finger_print_page.dart';
 import '../pages/auth/login/login_page.dart';
 import '../pages/auth/register/capture_identity_card_page.dart';
@@ -33,7 +31,8 @@ class RouteGenerator {
   static const String splashPage = 'splashPage';
   static const String loginPage = 'loginPage';
   static const String pinCodePage = 'pinCodePage';
-  static const String loginFingerprintPage = 'loginFingerprintPage';
+  // static const String loginFingerprintPage = 'loginFingerprintPage';
+  static const String qrCodePage = 'qrCodePage';
   static const String registerPage = 'registerPage';
   static const String navigationPage = 'navigationPage';
   static const String notificationPage = 'notificationPage';
@@ -76,8 +75,10 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case pinCodePage:
         return MaterialPageRoute(builder: (_) => const PinCodePage());
-      case loginFingerprintPage:
-        return MaterialPageRoute(builder: (_) => const LoginFingerprintPage());
+      // case loginFingerprintPage:
+      //   return MaterialPageRoute(builder: (_) => const LoginFingerprintPage());
+      case qrCodePage:
+          return MaterialPageRoute(builder: (_) => const QrCodeWidget());
       case navigationPage:
         return MaterialPageRoute(builder: (_) => const NavigationPage());
       case notificationPage:
@@ -110,8 +111,6 @@ class RouteGenerator {
             builder: (_) => const ManageNotificationPage());
       case securityPage:
         return MaterialPageRoute(builder: (_) => const SecurityPage());
-      case scanPage:
-        return MaterialPageRoute(builder: (_) => const ScanPage());
       case captureIdentityCardPage:
         return MaterialPageRoute(
             builder: (_) => const CaptureIdentityCardPage());

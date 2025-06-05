@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using static BE_InternetBanking.Models.DTO.ResponseServies;
 using BE_InternetBanking.Services.Helper;
+using BE_InternetBanking.Services.Contracts;
 
 namespace BE_InternetBanking.Features.Auth
 {
@@ -15,46 +16,41 @@ namespace BE_InternetBanking.Features.Auth
     {
         private readonly BankingContext _context;
         private readonly IConfiguration _config;
-        public OtpVerifiedCommandHandler(BankingContext context, IConfiguration config)
+        private readonly IOtp _iotp;
+        private readonly IUser _iuser;
+
+        public OtpVerifiedCommandHandler(BankingContext context, IConfiguration config, IOtp iotp, IUser iuser)
         {
             _context = context;
             _config = config;
+            _iotp = iotp;
+            _iuser = iuser;
         }
-        public async Task<OTPResponse> Handle(OtpVerifiedCommand request, CancellationToken cancellationToken)
+        public async Task<OTPResponse> Handle(OtpVerifiedCommand request, CancellationToken cancel)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            var user = await _iuser.GetUserByEmail(request.Email, cancel);
+            if (user == null) return new OTPResponse(false, null! , "Account does'nt exist!");
 
-            if (user == null)
-                return new OTPResponse(false, null! ,"Tài khoản không tồn tại!");
+            if(!await _iotp.OtpVerified(user.Id, request.Otp)) 
+                return new OTPResponse(true, null! , "Invalid OTP!");
 
-            var otp = await _context.OtpRequests
-                .Where(o => o.UserId == user.Id
-                 && o.OtpCode == request.Otp
-                 && o.IsUsed == false
-                 && o.ExpiredAt > DateTime.UtcNow)
-                .OrderByDescending(o => o.CreatedAt)
-                .FirstOrDefaultAsync();
-            if (otp == null)
-                return new OTPResponse(false, null!, "Mã OTP không hợp lệ hoặc đã hết hạn");
-
-            otp.IsUsed = true;
             if(user.IsEmailVerified == false)
             {
                 var (isSuccess, accountNumber) = await CreateAccountAsync(user.Id, 0, "Active");
                 if (isSuccess) user.IsEmailVerified = true;
-            }    
-            
-            string token = GenerateToken(user);
+            }
+
+            var (accessToken, jti) = GenerateToken(user, DateTime.UtcNow.AddDays(2));
 
             var oldSessions = await _context.LoginSessions
                 .Where(s => s.UserId == user.Id)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancel);
             _context.LoginSessions.RemoveRange(oldSessions);
 
             var LoginSessions = new LoginSession
             {
                 UserId = user.Id,
-                JwtToken = token,
+                JtiToken = jti,
                 DeviceInfo = request.DeviceInfo,
                 FcmToken = request.FcmToken,
                 LoginAt = GetTime.GetVietnamTime(),
@@ -62,17 +58,22 @@ namespace BE_InternetBanking.Features.Auth
             };
             await _context.LoginSessions.AddAsync(LoginSessions);
             await _context.SaveChangesAsync();
-            return new OTPResponse(true, token, "Đăng nhập thành công!");
+            return new OTPResponse(true, accessToken, "Login successfully!");
         }
-        private string GenerateToken(User user)
+
+        private (string Token, string Jti) GenerateToken(User user, DateTime expires)
         {
+            string jti = Guid.NewGuid().ToString();
             var claims = new List<Claim>
                 {
+                    new Claim(JwtRegisteredClaimNames.Jti, jti),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email!),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, "USER"),
                     new Claim(ClaimTypes.Name, user.FullName!)
                 };
+            foreach(var role in user.UserRoles)
+                claims.Add(new Claim(ClaimTypes.Role, role.Role.Name!));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Secret"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -80,13 +81,14 @@ namespace BE_InternetBanking.Features.Auth
             var token = new JwtSecurityToken(
                 issuer: _config["JWT:ValidIssuer"],
                 audience: _config["JWT:ValidAudience"],
-                expires: DateTime.UtcNow.AddDays(2),
+                expires: expires,
                 claims: claims,
                 signingCredentials: creds
             );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            return (Token: tokenString, Jti: jti);
         }
+
         private async Task<(bool isSuccess, string? accountNumber)> CreateAccountAsync(Guid userId, decimal balance, string status)
         {
             var accountNumberParam = new SqlParameter

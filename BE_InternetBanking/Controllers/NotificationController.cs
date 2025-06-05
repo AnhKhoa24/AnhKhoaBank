@@ -16,11 +16,13 @@ namespace BE_InternetBanking.Controllers
     {
         private readonly IFcmSender _fcmSender;
         private readonly IMediator _mediator;
+        private readonly IQRCodeService _iqr;
 
-        public NotificationController(IFcmSender fcmSender, IMediator mediator)
+        public NotificationController(IFcmSender fcmSender, IMediator mediator, IQRCodeService iqr)
         {
             _fcmSender = fcmSender;
             _mediator = mediator;
+            _iqr = iqr;
         }
 
         [HttpPost("send")]
@@ -30,7 +32,7 @@ namespace BE_InternetBanking.Controllers
             return Ok("Đã gửi!");
         }
         [Authorize]
-        [HttpGet("getHistoryNotification")]
+        [HttpPost("getHistoryNotification")]
         public async Task<IActionResult> GetHistoryNotification()
         {
             var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -42,5 +44,18 @@ namespace BE_InternetBanking.Controllers
 
             return Ok(getHisNof);
         }
+        [Authorize]
+        [HttpGet("qrcode")]
+        public async Task<IActionResult> GetQrCode()
+        {
+            var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(idString, out var userGuid))
+                return BadRequest();
+            var response = await _mediator.Send(new GetProfileUserCommand(userGuid));
+            string qr = $"{response.account.AccountNumber}|{User.FindFirstValue(ClaimTypes.Name)}";
+            var pngBytes = _iqr.GenerateQRCodeByte(qr);
+            return File(pngBytes, "image/png");
+        }
+
     }
 }

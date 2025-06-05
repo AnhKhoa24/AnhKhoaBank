@@ -37,10 +37,39 @@ namespace BE_InternetBanking.Controllers
 
             return Ok(result);
         }
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfileV2()
+        {
+            var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(idString, out var userGuid))
+                return BadRequest();
+
+            var response = await _mediator.Send(new GetProfileUserCommand(userGuid));
+            var roles = User
+                .FindAll(ClaimTypes.Role)           
+                .Select(c => c.Value)               
+                .ToList();
+
+            var result = new
+            {
+                Id = idString,
+                Email = User.FindFirstValue(ClaimTypes.Email),
+                FullName = User.FindFirstValue(ClaimTypes.Name),
+                Roles = roles,                    
+                AccountNumber = response.account.AccountNumber!,
+                Balance = response.account.Balance!,
+                CreatedAt = response.account.CreatedAt!
+            };
+
+            return Ok(result);
+        }
+
         [Authorize(Roles = "USER")]
         [HttpGet("dashboard")]
         public IActionResult UserDashboard()
         {
+            var FullName = User.FindFirstValue(ClaimTypes.Name);
             return Ok("Chào USER!");
         }
     }

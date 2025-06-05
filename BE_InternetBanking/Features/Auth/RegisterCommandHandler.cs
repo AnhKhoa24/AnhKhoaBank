@@ -1,4 +1,6 @@
-﻿using BE_InternetBanking.Models.Entities;
+﻿using AutoMapper;
+using BE_InternetBanking.Models.Entities;
+using BE_InternetBanking.Services.Contracts;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static BE_InternetBanking.Models.DTO.ResponseServies;
@@ -8,46 +10,49 @@ namespace BE_InternetBanking.Features.Auth
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterResponse>
     {
         private readonly BankingContext _context;
+        private readonly IMapper _mapper;
+        private readonly IUser _iuser;
 
-        public RegisterCommandHandler(BankingContext context)
+        public RegisterCommandHandler(BankingContext context, IMapper mapper, IUser iuser)
         {
             _context = context;
+            _mapper = mapper;
+            _iuser = iuser;
         }
-        public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancel)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken))
-                return new RegisterResponse(false, "Email đã được đăng ký!");
+            var checkuser = await _iuser.GetUserByAccountAsync(request.Email, request.PhoneNumber, cancel);
+            if (checkuser != null) return new RegisterResponse(false, "Email/phone number already exists!");
 
-            var user = new User
+            var user = _mapper.Map<User>(request);
+
+            var role = await GetDefaultRoleAsync(request.RoleName, cancel);
+            if (role == null) return new RegisterResponse(false, $"Role '{request.RoleName}' doesn't exist!");
+
+            var userRole = CreateUserRole(user.Id, role.Id);
+            await AddUserAsync(user, userRole, cancel);
+            return new RegisterResponse(true, "Registered successfully!");
+        }
+        private async Task<Role?> GetDefaultRoleAsync(string RoleName, CancellationToken cancel)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.Name == RoleName, cancel);
+        }
+        private UserRole CreateUserRole(Guid userId, Guid roleId)
+        {
+            return new UserRole
             {
                 Id = Guid.NewGuid(),
-                FullName = request.FullName,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                IsEmailVerified = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == "USER", cancellationToken);
-            if (role == null)
-                return new RegisterResponse(false, "Vai trò mặc định 'USER' chưa được tạo trong DB!");
-
-            var userRole = new UserRole
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                RoleId = role.Id,
+                UserId = userId,
+                RoleId = roleId,
                 AssignedAt = DateTime.UtcNow
             };
-
+        }
+        private async Task AddUserAsync(User user, UserRole userRole, CancellationToken cancel)
+        {
             _context.Users.Add(user);
             _context.UserRoles.Add(userRole);
-
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return new RegisterResponse(true, "Đăng ký thành công");
+            await _context.SaveChangesAsync(cancel);
         }
-
     }
 }

@@ -9,5 +9,6 @@ namespace BE_InternetBanking.Features.Auth
         public string Email { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string Password { get; set; } = null!;
+        public string RoleName { get; set; } = "USER";
     }
 }
