@@ -6,7 +6,7 @@ namespace BE_InternetBanking.Models.DTO
     {
         public record class RegisterResponse(bool Flag, string Message);
         public record class LoginResponse(bool Flag, string Email ,string Message);
-        public record class OTPResponse(bool Flag, string Token ,string Message);
+        public record class OTPResponse(bool Flag, string Token ,string Message, List<string>Roles);
         public record class CreateAccountRespone(bool Flag, string AccountNumber, string Message);
         public record class TranferRespone(bool Flag, string Id, string Status);
         public record class GetProfileUserRespone(bool Flag, Account account);

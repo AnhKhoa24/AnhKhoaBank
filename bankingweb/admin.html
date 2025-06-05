@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi" class="checking">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản trị AKBank</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Google Font (tuỳ chọn) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js (để vẽ biểu đồ) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Khi <html> có class "checking", ẩn toàn bộ <body> */
+    html.checking body {
+      visibility: hidden;
+    }
+
+    body {
+      font-family: "Montserrat", sans-serif;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Navbar */
+    .navbar-brand {
+      font-weight: 600;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #343a40;
+      color: #ffffff;
+    }
+  </style>
+
+  <script>
+    (function () {
+      console.log("🚀 Bắt đầu kiểm tra token...");
+
+      // 1. Lấy token từ localStorage
+      const token = localStorage.getItem('akbank_token');
+      console.log("Token tìm được:", token);
+
+      // 2. Nếu không có token, chuyển về trang login ngay
+      if (!token) {
+        console.log("Chưa có token, chuyển về login.html");
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // 3. Gọi API /api/Admin/profile để kiểm tra quyền
+      fetch('https://anhkhoa.tryasp.net/api/Admin/profile', {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          'Authorization': 'Bearer ' + token
+        }
+      })
+        .then(response => {
+          console.log("Response từ /api/Admin/profile:", response.status);
+          if (response.status === 200) {
+            // 4a. Nếu OK, remove class "checking" trên <html> để hiển thị trang
+            document.documentElement.classList.remove('checking');
+            // 4b. Sau khi hiển thị trang, phát event để JS khác bắt và vẽ chart + bảng
+            window.dispatchEvent(new Event('adminPageReady'));
+          } else if (response.status === 401 || response.status === 403) {
+            // 4c. Nếu 401/403, redirect về login
+            console.log("Không có quyền hoặc token hết hạn, chuyển về login.html");
+            window.location.href = '/login.html';
+          } else {
+            // 4d. Trường hợp khác (500, 404…), cũng redirect
+            console.log("Lỗi khác:", response.status, "chuyển về login.html");
+            window.location.href = '/login.html';
+          }
+        })
+        .catch(err => {
+          console.error("Lỗi fetch /api/Admin/profile:", err);
+          window.location.href = '/login.html';
+        });
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Header start -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 sticky-top transition" id="header">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+      <img src="assets/images/logo.png" alt="Logo" width="30" height="30"
+           style="transform: scale(1.5); transform-origin: center;">
+      &nbsp;<span>AKBank</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="#">Trang quản trị</a></li>
+      </ul>
+
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle no-arrow"
+           id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://i.pravatar.cc/40" id="id_avt" alt="avatar" width="32" height="32" class="rounded-circle">
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="#">Thông tin tài khoản</a></li>
+          <li><a class="dropdown-item" href="#">Cài đặt</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" id="logoutBtn">Đăng xuất</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- Header end -->
+
+  <!-- Nội dung chính trang quản trị -->
+  <main class="container my-5">
+    <h1 class="mb-4">Thống kê giao dịch 7 ngày gần nhất</h1>
+    <!-- Canvas để vẽ biểu đồ -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <canvas id="weeklyChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <!-- Bảng dữ liệu giao dịch (sẽ được tạo động bằng JS) -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Danh sách giao dịch từ endpoint datathongke</h5>
+        <div class="table-responsive">
+          <table id="transactionTable" class="table table-bordered table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>STT</th>
+                <th>FromAccount</th>
+                <th>ToAccount</th>
+                <th>Số tiền</th>
+                <th>Message</th>
+                <th>Times</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS sẽ đẩy dữ liệu vào đây -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ... Bạn có thể thêm các thành phần quản trị khác ở đây ... -->
+  </main>
+
+  <!-- Footer (nếu cần) -->
+  <footer class="py-4">
+    <div class="container text-center">
+      <p class="mb-0">© 2025 AKBank. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS + Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery (nếu cần) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+  <!-- Script xử lý logout (xóa token rồi redirect) -->
+  <script>
+    document.getElementById('logoutBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      localStorage.removeItem('akbank_token');
+      window.location.href = '/login.html';
+    });
+  </script>
+
+  <!-- Script gọi API vẽ chart và render bảng -->
+   <!-- Script gọi API vẽ chart và render bảng -->
+  <script>
+    window.addEventListener('adminPageReady', () => {
+      const token = localStorage.getItem('akbank_token');
+
+      // ===== 1) Vẽ biểu đồ 7 ngày (GET /api/ThongKe/weekly) =====
+      fetch('https://anhkhoa.tryasp.net/api/ThongKe/weekly', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      })
+      .then(async response => {
+        if (!response.ok) {
+          const err = await response.text().catch(() => response.statusText);
+          throw new Error('Không lấy được dữ liệu thống kê: ' + err);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // data là mảng 7 phần tử { date, count }
+        const labels = data.map(item => {
+          const dt = new Date(item.date);
+          const day = dt.getDate().toString().padStart(2, '0');
+          const month = (dt.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}/${month}`;
+        });
+        const counts = data.map(item => item.count);
+
+        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        if (window.weeklyChartInstance) {
+          window.weeklyChartInstance.destroy();
+        }
+        window.weeklyChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Số giao dịch',
+              data: counts,
+              backgroundColor: 'rgba(0, 123, 255, 0.6)',
+              borderColor: 'rgba(0, 123, 255, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Ngày'
+                }
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Số giao dịch'
+                },
+                ticks: {
+                  precision: 0
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: context => ` ${context.parsed.y} giao dịch`
+                }
+              }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
+      })
+      .catch(err => console.error(err));
+
+      // ===== 2) Lấy dữ liệu giao dịch (POST /api/ThongKe/datathongke) =====
+      fetch('https://anhkhoa.tryasp.net/api/ThongKe/datathongke', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: '' // theo ví dụ bạn gửi body rỗng
+      })
+      .then(async response => {
+        if (!response.ok) {
+          const err = await response.text().catch(() => response.statusText);
+          throw new Error('Không lấy được dữ liệu giao dịch: ' + err);
+        }
+        return response.json();
+      })
+      .then(transactions => {
+        // transactions là mảng các object với
+        // { id, message, timestamp, fromAccountNumber, toAccountNumber, amount }
+
+        const tbody = document.querySelector('#transactionTable tbody');
+        tbody.innerHTML = ''; // xóa dữ liệu cũ
+
+        transactions.forEach((tx, index) => {
+          const tr = document.createElement('tr');
+
+          // STT
+          const tdStt = document.createElement('td');
+          tdStt.textContent = (index + 1).toString();
+          tr.appendChild(tdStt);
+
+          // FromAccountNumber
+          const tdFrom = document.createElement('td');
+          tdFrom.textContent = tx.fromAccountNumber || '';
+          tr.appendChild(tdFrom);
+
+          // ToAccountNumber
+          const tdTo = document.createElement('td');
+          tdTo.textContent = tx.toAccountNumber || '';
+          tr.appendChild(tdTo);
+
+          // Amount
+          const tdAmount = document.createElement('td');
+          tdAmount.textContent = tx.amount != null ? tx.amount.toLocaleString() : '';
+          tr.appendChild(tdAmount);
+
+          // Message
+          const tdMessage = document.createElement('td');
+          tdMessage.textContent = tx.message || '';
+          tr.appendChild(tdMessage);
+
+          // Timestamp
+          const tdTimestamp = document.createElement('td');
+          if (tx.timestamp) {
+            const dt = new Date(tx.timestamp);
+            // Format "YYYY-MM-DD HH:mm:ss"
+            const yyyy = dt.getFullYear();
+            const mm = (dt.getMonth() + 1).toString().padStart(2, '0');
+            const dd = dt.getDate().toString().padStart(2, '0');
+            const hh = dt.getHours().toString().padStart(2, '0');
+            const mi = dt.getMinutes().toString().padStart(2, '0');
+            const ss = dt.getSeconds().toString().padStart(2, '0');
+            tdTimestamp.textContent = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+          } else {
+            tdTimestamp.textContent = '';
+          }
+          tr.appendChild(tdTimestamp);
+
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => console.error(err));
+    });
+  </script>
+
+</body>
+</html>

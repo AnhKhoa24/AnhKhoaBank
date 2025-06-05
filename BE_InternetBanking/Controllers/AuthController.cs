@@ -56,7 +56,7 @@ namespace BE_InternetBanking.Controllers
                 return BadRequest(ModelState);
             var result = await _mediator.Send(_mapper.Map<OtpVerifiedCommand>(request));
             return result.Flag
-                ? Ok(new { success = true, message = result.Message, token = result.Token })
+                ? Ok(new { success = true, message = result.Message, token = result.Token, roles = result.Roles })
                 : BadRequest(new { success = false, message = result.Message });
         }
         [HttpPost("logout")]

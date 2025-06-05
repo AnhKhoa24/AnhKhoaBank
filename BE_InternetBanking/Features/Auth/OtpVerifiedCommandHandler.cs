@@ -29,10 +29,10 @@ namespace BE_InternetBanking.Features.Auth
         public async Task<OTPResponse> Handle(OtpVerifiedCommand request, CancellationToken cancel)
         {
             var user = await _iuser.GetUserByEmail(request.Email, cancel);
-            if (user == null) return new OTPResponse(false, null! , "Account does'nt exist!");
+            if (user == null) return new OTPResponse(false, null! , "Account does'nt exist!", null!);
 
             if(!await _iotp.OtpVerified(user.Id, request.Otp)) 
-                return new OTPResponse(true, null! , "Invalid OTP!");
+                return new OTPResponse(true, null! , "Invalid OTP!", null!);
 
             if(user.IsEmailVerified == false)
             {
@@ -58,7 +58,8 @@ namespace BE_InternetBanking.Features.Auth
             };
             await _context.LoginSessions.AddAsync(LoginSessions);
             await _context.SaveChangesAsync();
-            return new OTPResponse(true, accessToken, "Login successfully!");
+            List<string> Roles = user.UserRoles.Select(m=>m.Role.Name!).ToList();
+            return new OTPResponse(true, accessToken, "Login successfully!", Roles);
         }
 
         private (string Token, string Jti) GenerateToken(User user, DateTime expires)
